@@ -1,0 +1,111 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+*******************************************************************************************/
+/*
+Dealer Name: Advanced Integration Ltd
+System Name: ThermostatLogic
+System Number: v1.0
+Programmer: Panagiotis Triantafyllopoulos
+Comments:
+*/
+
+/*******************************************************************************************
+  Compiler Directives*******************************
+************************************************************/
+#SYMBOL_NAME "Thermostat Logic v2.0"
+#CATEGORY "22" // HVAC
+#HELP_PDF_FILE "Thermostat Logic.pdf"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+
+/*******************************************************************************************
+  Include Libraries
+*******************************************************************************************/
+// #INCLUDEPATH "../lib"
+#USER_SIMPLSHARP_LIBRARY "ThermostatLogic"
+
+
+
+/*******************************************************************************************
+  DIGITAL, ANALOG and SERIAL INPUTS and OUTPUTS
+*******************************************************************************************/
+DIGITAL_INPUT Mode_On;
+ANALOG_INPUT Current_Temperature, Setpoint;
+DIGITAL_OUTPUT Keep_On, Keep_Off;
+
+/*******************************************************************************************
+  Parameters
+*******************************************************************************************/
+INTEGER_PARAMETER _skip_,_skip_,_skip_,OffsetAtIncreasing, OffsetAtDecreasing;
+/*******************************************************************************************
+  Parameter Properties
+  (Uncomment and declare parameter properties as needed)
+*******************************************************************************************/
+/*
+#BEGIN_PARAMETER_PROPERTIES parameter_variable, parameter_variable, ...
+   // propValidUnits = // unitString or unitDecimal|unitHex|unitPercent|unitCharacter|unitTime|unitTicks;
+   // propDefaultUnit = // unitString, unitDecimal, unitHex, unitPercent, unitCharacter, unitTime or unitTicks;
+   // propBounds = lower_bound , upper_bound;
+   // propDefaultValue = ;  // or, propDefaultValue = "";
+   // propList = // { "value" , "label" } , { "value" , "label" } , ... ;
+   // propShortDescription = "status_bar_hint_text";
+   // #BEGIN_PROP_FULL_DESCRIPTION  line_1...  line_2...  line_n  #END_PROP_FULL_DESCRIPTION
+   // #BEGIN_PROP_NOTES line_1...  line_2...  line_n  #END_PROP_NOTES
+#END_PARAMETER_PROPERTIES
+*/
+
+/*******************************************************************************************
+  Global Variables
+*******************************************************************************************/
+Thermostat classThermostat;
+/*******************************************************************************************
+  Functions
+*******************************************************************************************/
+
+callback function myDel(INTEGER keepOn, INTEGER keepOff)
+{
+
+	trace("Callback from C# keepOn:%d keepOff:%d",keepOn,keepOff);
+	Keep_On = keepOn;
+    Keep_Off = keepOff;
+}
+
+
+/*******************************************************************************************
+  Event Handlers
+*******************************************************************************************/
+PUSH Mode_On
+{
+	classThermostat.setMode(1);
+	classThermostat.thermostatAlgorithm();
+}
+
+
+RELEASE Mode_On
+{
+    classThermostat.setMode(0);
+	classThermostat.thermostatAlgorithm();
+
+}
+
+
+CHANGE Current_Temperature, Setpoint
+{
+	classThermostat.getData(Current_Temperature, Setpoint);
+	classThermostat.thermostatAlgorithm();
+}
+/*******************************************************************************************
+  Main()
+*******************************************************************************************/
+Function Main()
+{
+
+	WaitForInitializationComplete();
+	
+	classThermostat.setMode(0);
+	classThermostat.getOffset(OffsetAtIncreasing,OffsetAtDecreasing);
+	classThermostat.getData(Current_Temperature, Setpoint);
+	RegisterDelegate(classThermostat, thEvent, myDel);
+}
+
