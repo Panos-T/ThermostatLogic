@@ -17,7 +17,12 @@ namespace ThermostatLogic
         public bool thMode,tempInc;
         public ushort temp, setpoint, offsetInc, offsetDec, previousTemp;
 
-       
+
+        //Contstructor
+       public Thermostat()
+        {
+
+        }
         
 
         //Get SIMPL+ commands
@@ -34,7 +39,7 @@ namespace ThermostatLogic
 
         public void getData(ushort currentTemp, ushort currentSetpoint)
         {
-            previousTemp = temp;    //<----------Possible Exception Error
+            previousTemp = temp;   
             temp = currentTemp;
             setpoint = currentSetpoint;
             if (previousTemp <= temp)
@@ -51,29 +56,43 @@ namespace ThermostatLogic
         //Algorithm implementation
         public void thermostatAlgorithm()
         {
-        
             if (thMode)
             {
-                if (tempInc)
+                if (temp > setpoint)
                 {
-                    if (setpoint - temp > offsetInc)
+                    if (tempInc)
                     {
-                        turnOn();
+                        turnOff();
                     }
                     else
                     {
-                        turnOff();
+                        if (temp - setpoint > offsetDec)
+                        {
+                            turnOff();
+                         
+                        }
+                        else
+                        {
+                            turnOn();
+                        }
                     }
                 }
                 else
                 {
-                    if (temp - setpoint > offsetInc)
+                    if (tempInc)
                     {
-                        turnOn();
+                        if (setpoint - temp > offsetInc)
+                        {
+                            turnOn();
+                        }
+                        else
+                        {
+                            turnOff();
+                        }
                     }
                     else
                     {
-                        turnOff();
+                        turnOn();
                     }
                 }
             }
@@ -92,7 +111,7 @@ namespace ThermostatLogic
 
         public void turnOff()
         {
-            thEvent(1, 0);
+            thEvent(0, 1);
         }
     }
 }
